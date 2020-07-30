@@ -230,7 +230,7 @@ int convert_to_CvMat2(const PyObject* o, cv::Mat& m)
 
     if( m.data )
     {
-        m.refcount = refcountFromPyObject(o);
+        m.u->refcount = *refcountFromPyObject(o);
         m.addref(); // protect the original numpy array from deallocation
         // (since Mat destructor will decrement the reference counter)
     };
@@ -251,12 +251,12 @@ PyObject* pyopencv_from(const Mat& m)
     if( !m.data )
         Py_RETURN_NONE;
     Mat temp, *p = (Mat*)&m;
-    if(!p->refcount || p->allocator != &g_numpyAllocator)
+    if(!p->u->refcount || p->allocator != &g_numpyAllocator)
     {
         temp.allocator = &g_numpyAllocator;
         ERRWRAP2(m.copyTo(temp));
         p = &temp;
     }
     p->addref();
-    return pyObjectFromRefcount(p->refcount);
+    return pyObjectFromRefcount(&p->u->refcount);
 }
